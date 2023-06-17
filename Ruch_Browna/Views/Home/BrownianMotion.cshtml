@@ -1,0 +1,200 @@
+﻿@using Newtonsoft.Json
+@model Ruch_Browna.Models.BrownianMotionSimulationView
+
+@{
+    ViewData["Title"] = "Ruchy Browna";
+}
+
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<div class="row">
+    <!-- Left side columns -->
+    <div class="col-lg-8">
+        <div class="row">
+            <div class="col-12">
+
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Ruchy Browna</h5>
+                        Ruchy Browna – chaotyczne ruchy cząstek w płynie, wywołane zderzeniami zawiesiny z cząsteczkami płynu.
+                        W 1827 roku szkocki biolog Robert Brown obserwując przez mikroskop pyłki kwiatowe w zawiesinie wodnej dostrzegł, iż znajdują się one w nieustannym, chaotycznym ruchu.
+                    </div>
+                </div>
+                <div><p></p></div>
+                <div class="card">
+                    <div class="card-body">
+                        <div id="plot"></div>
+                        <script>
+                            // tablica z punktami
+                            var points = [@Model.ChartCoordinates ];
+
+                            // stałe
+                            const SIZE = 10;
+                            const DELAY = 100;
+
+                            // inicjalizacja zmiennych
+                            var x = [];
+                            var y = [];
+                            var numPoints = points.length;
+                            var removeCounter = 0;
+
+                            // konfiguracja wykresu
+                            var trace = {
+                                x: x,
+                                y: y,
+                                mode: "lines+markers",
+                                type: "scatter",
+                            };
+                            var layout = {
+                                xaxis: { title: "X" },
+                                yaxis: { title: "Y" },
+                            };
+                            var data = [trace];
+
+                            // rysowanie pustego wykresu
+                            Plotly.newPlot("plot", data, layout);
+
+                            // animacja
+                            var currentIndex = 0;
+                            function drawPoint() {
+                                // dodanie nowego punktu
+                                x.push(points[currentIndex][0]);
+                                y.push(points[currentIndex][1]);
+
+                                // usunięcie najstarszego punktu
+                                if (x.length > SIZE) {
+                                    x.shift();
+                                    y.shift();
+                                }
+
+                                // zaktualizowanie stylu punktów
+                                var updates = {
+                                    "marker.color": Array(x.length - 1).fill('blue').concat(['red']),
+                                    "marker.size": Array(x.length - 1).fill(5).concat([10])
+                                };
+                                Plotly.restyle("plot", updates, [x.length - 1]);
+
+                                // aktualizacja wykresu
+                                Plotly.update("plot", { x: [x], y: [y] });
+
+                                currentIndex++;
+
+                                if (currentIndex < numPoints) {
+                                    setTimeout(drawPoint, DELAY);
+                                }
+                            }
+                            setTimeout(drawPoint, DELAY);
+                        </script>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div><!-- End Left side columns -->
+    <!-- Right side columns -->
+    <div class="col-lg-4">
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">@Model.CreatDateTime</h5>
+                <div class="row">
+                    <div class="col-lg-8">
+                        <dt>
+                            <label asp-for="AmountOfSteps"></label>
+                        </dt>
+                        <dd>
+                            @Model.AmountOfSteps
+                        </dd>
+                        <dt>
+                            <label asp-for="Vector"></label>
+                        </dt>
+                        <dd>
+                            @Model.Vector.ToString("#0.00000")
+                        </dd>
+                    </div>
+                    <div class="col-lg-4">
+                        <dt>
+                            <label asp-for="Coordinates.First().ValueX"></label>
+                        </dt>
+                        <dd>
+                            @Model.Coordinates.Last().ValueX.ToString("#0.00000")
+                        </dd>
+                        <dt>
+                            <label asp-for="Coordinates.First().ValueY"></label>
+                        </dt>
+                        <dd>
+                            @Model.Coordinates.Last().ValueY.ToString("#0.00000")
+                        </dd>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <form asp-action="DownloadData">
+                        <input type="hidden" id="coordinatesData" name="coordinatesData" value='@JsonConvert.SerializeObject(Model.Coordinates)' />
+                        <div class="d-grid gap-2 mt-3">
+                            <button type="submit" value="Pobierz do .xls" class="btn btn-primary">
+                                <i class="bi bi-graph-up"> </i>
+                                Pobierz do .xls
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+        <div><p></p></div>
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>
+                                <label asp-for="Coordinates.First().Step"></label>
+                            </th>
+                            <th>
+                                <label asp-for="Coordinates.First().ValueX"></label>
+                            </th>
+                            <th>
+                                <label asp-for="Coordinates.First().ValueY"></label>
+                            </th>
+                            <th>
+                                <label asp-for="Coordinates.First().Vector"></label>
+                            </th>
+                        </tr>
+                    </thead>
+                    @if (Model.Coordinates.Count() != 0)
+                    {
+                        <tbody>
+                            @foreach (var item in Model.Coordinates)
+                            {
+                                <tr>
+                                    <td>
+                                        @item.Step
+                                    </td>
+                                    <td>
+                                        @item.ValueX.ToString("#0.00000")
+                                    </td>
+                                    <td>
+                                        @item.ValueY.ToString("#0.00000")
+                                    </td>
+                                    <td>
+                                        @item.Vector.ToString("#0.00000")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    }
+                </table>
+            </div>
+        </div>
+
+    </div><!-- End Right side columns -->
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

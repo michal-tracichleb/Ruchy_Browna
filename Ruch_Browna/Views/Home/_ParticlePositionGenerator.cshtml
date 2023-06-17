@@ -1,0 +1,25 @@
+﻿@model Ruch_Browna.Models.ParticlePositionGenerator
+
+<h5 class="card-title">Generator przesunięć cząstek</h5>
+<form asp-action="BrownianMotion">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-floating mb-3">
+        <input asp-for="AmountOfSteps" class="form-control" id="floatingInput" placeholder="123" value="">
+        <label asp-for="AmountOfSteps"></label>
+        <span asp-validation-for="AmountOfSteps" class="text-danger"></span>
+    </div>
+
+    <div class="d-grid gap-2 mt-3">
+        <button type="submit" value="Wygeneruj" class="btn btn-primary">
+            <i class="bi bi-graph-up"> </i>
+            Wygeneruj
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
